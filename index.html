@@ -85,10 +85,12 @@
   .keystrip__item[data-k="infra"] { color:var(--infra); }
   .keystrip__item span:last-child { color:var(--ink); }
   .keystrip__hint { color:var(--ink-3); font-size:12px; font-weight:500; padding-left:14px; border-left:1px solid var(--line); }
+  .map-subtitle { text-align:center; color:var(--ink-3); font-size:13.5px; line-height:1.5; max-width:64ch; margin:2px auto 4px; padding:0 18px; }
+  .map-subtitle strong { color:var(--ink-2); font-weight:700; }
 
   /* MAP CANVAS */
   .stage { padding:24px 22px 18px; }
-  .stage__inner { background:transparent; border:0; border-radius:var(--radius); position:relative; overflow:hidden; aspect-ratio:1.35/1; }
+  .stage__inner { background:transparent; border:0; border-radius:var(--radius); position:relative; overflow:hidden; aspect-ratio:1.25/1; }
   .stage__inner::before { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 55%, var(--surface-2) 100%); }
   .stage svg { width:100%; height:100%; display:block; }
 
@@ -185,9 +187,11 @@
       <span class="keystrip__hint">Click a program to filter the map · click a country to view details</span>
     </div>
 
+    <p class="map-subtitle">A view of CSRI’s European reach across <strong>CEL</strong>, <strong>InterHEI</strong> and <strong>InfraBooster</strong>.</p>
+
     <div class="stage">
       <div class="stage__inner">
-        <svg id="svg" viewBox="0 0 1100 820" preserveAspectRatio="xMidYMid meet"></svg>
+        <svg id="svg" viewBox="0 0 1100 900" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
     </div>
 
@@ -265,8 +269,8 @@ function animateNum(el, target, dur=2000){
 // (hero numbers removed)
 
 // ---------- Layout ----------
-// Wide canvas — 1100x820; hub centered
-const cx = 550, cy = 410;
+// Wide canvas — 1100x900; hub centered lower to avoid clipping top labels
+const cx = 550, cy = 450;
 const R_HUB = 62;
 const R_INNER = 150; // 3-program countries
 const R_MID   = 270; // 2-program countries
@@ -342,15 +346,17 @@ function el(tag, attrs={}, kids=[]){
 
 // background rings — proximity indicates program overlap
 [
-  { r:R_INNER, label:"3 programs", y:-10 },
-  { r:R_MID, label:"2 programs", y:-10 },
-  { r:R_OUTER, label:"1 program", y:-10 }
+  { r:R_INNER, label:"3 programs", dy:-42 },
+  { r:R_MID, label:"2 programs", dy:0 },
+  { r:R_OUTER, label:"1 program", dy:42 }
 ].forEach((item,i)=>{
   svg.appendChild(el("circle", { cx, cy, r:item.r, class:"ring"+(i===2?" ring--solid":"") }));
-  const labelY = cy-item.r+item.y;
+  // Ring labels are placed on the right side, where there are fewer country nodes.
+  const labelX = cx + item.r + 48;
+  const labelY = cy + item.dy;
   const labelW = item.label.length * 8.2 + 18;
-  svg.appendChild(el("rect", { x:cx-labelW/2, y:labelY-13, width:labelW, height:19, rx:9, ry:9, class:"ring-label-bg" }));
-  const rt = el("text", { x:cx, y:labelY, "text-anchor":"middle", class:"ring-label" });
+  svg.appendChild(el("rect", { x:labelX-labelW/2, y:labelY-13, width:labelW, height:20, rx:10, ry:10, class:"ring-label-bg" }));
+  const rt = el("text", { x:labelX, y:labelY, "text-anchor":"middle", class:"ring-label" });
   rt.textContent = item.label;
   svg.appendChild(rt);
 });
@@ -368,7 +374,7 @@ const ARC_HALF = Math.PI/3.6;
   const a = ANG[k];
   svg.appendChild(el("path", { d: describeArc(cx,cy,ARC_R,a-ARC_HALF,a+ARC_HALF), class:"program-arc", "data-k":k }));
   const lx = cx + Math.cos(a)*(ARC_R+22);
-  const ly = cy + Math.sin(a)*(ARC_R+22);
+  const ly = cy + Math.sin(a)*(ARC_R+22) + (k === "cel" ? 18 : 0);
   const tagText = INITIATIVES[k].name.toUpperCase();
   const tagW = tagText.length * 9.2 + 20;
   svg.appendChild(el("rect", { x:lx-tagW/2, y:ly-13, width:tagW, height:26, rx:13, ry:13, class:"program-tag-bg" }));
